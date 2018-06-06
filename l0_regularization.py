@@ -33,7 +33,8 @@ def L0_loss(latent_batch, latent_dim, reg_const):
     interval = [-0.1, 1.1]
     u = tf.random_uniform(shape=[latent_dim], dtype=tf.float32)
     # c = log(\alpha)
-    c = tf.get_variable(tf.random_normal('gating_node', shape=[latent_dim], mean=np.log(3 / 7), stddev=1e-3))  # the parameter to tune
+    # c = tf.get_variable('gating_node', tf.random_normal(shape=[latent_dim], mean=np.log(3 / 7), stddev=1e-3))  # the parameter to tune
+    c = tf.Variable(tf.random_normal(shape=[latent_dim], mean=np.log(3 / 7), stddev=1e-3), name='gating_node', dtype=tf.float32)  # todo, use tf.get_variable the parameter to tune
     alpha = tf.exp(c)
     beta = 2/3
     s = tf_concrete_transoform(u, alpha, beta)
@@ -53,3 +54,31 @@ def L0_loss(latent_batch, latent_dim, reg_const):
 
     return add_loss, train_op_checkers, latent_batch
 
+def l0_regularizer(latent_batch, latent_dim, reg_const):
+    '''
+    compute the gating variable and regularization terms
+    :return: z_gate: the gating variables; reg: the sum of all regularization terms; alpha: the sparse parameters to tune
+    '''
+    interval = [-0.1, 1.1]
+    u = tf.random_uniform(shape=[latent_dim], dtype=tf.float32)
+    # c = log(\alpha)
+    # c = tf.get_variable('gating_node', tf.random_normal(shape=[latent_dim], mean=np.log(3 / 7), stddev=1e-3))  # the parameter to tune
+    c = tf.Variable(tf.random_normal(shape=[latent_dim], mean=np.log(3 / 7), stddev=1e-3), name='gating_node', dtype=tf.float32)  # todo, use tf.get_variable the parameter to tune
+    alpha = tf.exp(c)
+    beta = 2/3
+    s = tf_concrete_transoform(u, alpha, beta)
+
+    s_bar = tf_stretch(s, interval)
+    s_bar_pred = tf_stretch(tf.nn.sigmoid(c), interval)
+
+    latent_gated_training = tf_hard_sigmoid(s_bar) * latent_batch
+    latent_gated_prediction = tf_hard_sigmoid(s_bar_pred) * latent_batch
+    #is_training = tf.placeholder(tf.bool, shape=0)         
+    def latent_batch(is_training):
+        return tf.cond(is_training, lambda: latent_gated_training, lambda: latent_gated_prediction) 
+    add_losses = tf.nn.sigmoid(c - beta * (tf.log(-interval[0]) - tf.log(interval[1])))
+    l0_loss = tf.reduce_sum(add_losses)
+    tf.summary.scalar('l0_loss', l0_loss)
+    add_loss = reg_const * l0_loss    
+
+    return add_loss, latent_batch
