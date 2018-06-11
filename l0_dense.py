@@ -62,11 +62,21 @@ class L0Dense(Dense):
       # create masked kernel/bias
       kernel_0 = self.kernel
       if self.kernel_regularizer is not None:
+
           trng_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "trng_mask:0")
           pred_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "pred_mask:0")
           masked_kernel = tf.cond(self.is_training,
                                   lambda: trng_masked_kernel,
                                   lambda: pred_masked_kernel, name='l0_masked_kernel')
+
+          # Alternative Masking: better learning result but not theoretically correct
+          # trng_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "el0n_mask:0")
+          # pred_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "el0n_mask:0")
+          # masked_kernel = tf.cond(self.is_training,
+          #                         lambda: trng_masked_kernel * kernel_0,
+          #                         lambda: pred_masked_kernel * kernel_0, name='l0_masked_kernel')
+
+
           self.kernel = masked_kernel
 
       bias_0 = self.bias
