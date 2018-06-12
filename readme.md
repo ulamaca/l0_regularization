@@ -1,26 +1,29 @@
 # L_0 Regularizer, l0_layer and l0_dense:
 ## Introduction: 
+- L_0 regularization has only zero value at the origin and holds fixed otherwise. However this regularization is not directly applicable since there is no gradient almost everywhere and the most informative point is not differentiable.
+- We implement an approximate version of L_0 regularization from [Louizos et al. 2017](https://arxiv.org/abs/1712.01312).
 - L_0 regularizer is intended to develop into a format that can be applicable to any architecture
-- We provide an example of dense layer to demonstrate how to incoporate $L_0$ regularization into a model since L_0 regularization induces an architectural change (probabilistic mask creation) therefore cannot be applied directly as any other L^p regularization 
+- We provide examples (l0_dense and l0_layer) to demonstrate how to incoporate L_0 regularization into a model since L_0 regularization induces an architectural change (probabilistic mask creation) therefore cannot be applied directly as any other L^p regularization 
 
 ## Usage:
-- the program is built as the structure: l0_computation -> l0_regularizer -> l0_dense/l0_layer and l0_computation is not recommended for user for common applications.
-- l0_computation defines the computational mechanisms of l0 regularization on a tensors during which a masked conditional tensor is created and will replace the original tensor for model building. [Louizos et al. 2017](https://arxiv.org/abs/1712.01312). 
-- l0_regularizer:
+- the program is organized as the following: 
+	- l0_computation -> l0_regularizer -> l0_dense/l0_layer and l0_computation is not recommended for user for common applications.
+- **l0_computation** defines the computational mechanisms of l0 regularization on a tensors during which a masked conditional tensor is created and will replace the original tensor for model building. For details please refer to [Louizos et al. 2017](https://arxiv.org/abs/1712.01312). 
+- **l0_regularizer**:
 	- adpated from the structure of tf.contrib.layers.l2_regularizer
 	- inputs: scale, scope=None
 	- outputs: the (scaled) regularization loss
-- l0_dense
+- **l0_dense**
 	- adapted from the structure of tf.layers.dense
 	- almost the same as the original dense function.
 	- Except an additional argument is_training is added for tagging training/prediction status of the weights/bias
-	- the losses created after applying l0_regularizer can be obtained by calling __tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)__
-- l0_layer
+	- the losses created after applying l0_regularizer can be obtained by calling _tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)_
+- **l0_layer**
 	- inherited from the base.Layer class and structured much like tf.layers.dropout
 	- the assumed input format is [?, D] or [D, ?]
 	- inputs: input_tensor, reg_const, training, seed, name
 	- outputs: the masked layer activity
-	- the losses created after applying l0_regularizer can be obtained by calling __tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)__
+	- the losses created after applying l0_regularizer can be obtained by calling _tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)_
 
 ## Note:
 - The masks are created in l0_computation and are retrieved at the l0_dense.call method.
