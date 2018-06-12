@@ -7,8 +7,7 @@
 ## Usage:
 - the program is organized as the following: 
 	- **l0_computation -> l0_regularizer -> l0_dense/l0_layer**
-	- l0_computation is not recommended for user for common applications.
-- **l0_computation** defines the computational mechanisms of l0 regularization on a tensors during which a masked conditional tensor is created and will replace the original tensor for model building. For details please refer to [Louizos et al. 2017](https://arxiv.org/abs/1712.01312). 
+	- **l0_computation** defines the computational mechanisms of l0 regularization on a tensors during which a masked conditional tensor is created and will replace the original tensor for model building. For details please refer to [Louizos et al. 2017](https://arxiv.org/abs/1712.01312). **l0_computation** is not recommended for users for common applications 
 - **l0_regularizer**:
 	- adpated from the structure of tf.contrib.layers.l2_regularizer
 	- it is intended to develop into a format that can be applicable to any architecture
