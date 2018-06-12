@@ -33,7 +33,13 @@ def l0_computation(tensor,
                    mu_c=np.log(3 / 7),
                    sigma_c=1e-3,
                    beta=2/3):
-    tensor_shape = tensor.get_shape()
+
+    ### todo, may modulize: module: mask_shape
+    tensor_shape = tensor.get_shape().as_list() # use the list format
+    if None in tensor_shape:
+        tensor_shape = [1 if d is None else d for d in tensor_shape]
+    ###
+
     u = tf.random_uniform(shape=tensor_shape, dtype=tf.float32)
 
     c = tf.Variable(tf.random_normal(shape=tensor_shape, mean=mu_c, stddev=sigma_c), 
@@ -47,6 +53,7 @@ def l0_computation(tensor,
     s_bar = tf_stretch(s, interval)
     s_bar_pred = tf_stretch(tf.nn.sigmoid(c), interval)
 
+    # create L0_masted tensor in the graph and tag it with proper names
     l0_tensor_training = tf.identity(tf_hard_sigmoid(s_bar) * tensor,  "trng_mask") #
     l0_tensor_prediction = tf.identity(tf_hard_sigmoid(s_bar_pred) * tensor, "pred_mask")
 
@@ -80,7 +87,6 @@ def l0_regularizer(scale, scope=None):
     def l0(weights):
         """Applies l2 regularization to weights."""
         with ops.name_scope(scope, 'l0_regularizer', [weights]) as name:
-            print(name)
             my_scale = ops.convert_to_tensor(scale,
                                              dtype=weights.dtype.base_dtype,
                                              name='scale')
