@@ -39,7 +39,7 @@ class L0_Layer(base.Layer):
                seed=None, # todo-1, the seed function is not yet added
                name=None,
                **kwargs):
-    super(L0_Layer, self).__init__(name=name, **kwargs)
+    super().__init__(name=name, **kwargs)
     self.reg_const = reg_const
     self.seed = seed
 
@@ -52,8 +52,8 @@ class L0_Layer(base.Layer):
                               lambda: layer_trng,
                               lambda: layer_pred)
 
-  def compute_output_shape(self, input_shape):
-    return input_shape
+  # there was compute_output_shape from tf.layers.dropout which I deleted, note here for future problem
+
 
 
 def l0_layer(inputs,
