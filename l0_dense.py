@@ -3,11 +3,10 @@ import tensorflow as tf
 from tensorflow.python.layers.core import Dense
 from tensorflow.python.ops import init_ops
 from .l0_regularization import l0_regularizer
+from .utils import get_l0_maskeds
 
 
 
-def get_tensor_by_name(name):
-    return tf.get_default_graph().get_tensor_by_name(name)
 
 class L0Dense(Dense):
   def __init__(self, is_training, seed, *args, **kwargs):
@@ -24,8 +23,12 @@ class L0Dense(Dense):
       # create masked kernel/bias
       kernel_0 = self.kernel
       if self.kernel_regularizer is not None:
+          l0_masked_kernels_path = l0_absolute_path + "/kernel" + l0_relative_path
+          trng_masked_kernel, pred_masked_kernel = get_l0_maskeds(l0_masked_kernels_path)
+          '''
           trng_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "trng_mask:0")
           pred_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "pred_mask:0")
+          '''
           masked_kernel = tf.cond(self.is_training,
                                   lambda: trng_masked_kernel,
                                   lambda: pred_masked_kernel, name='l0_masked_kernel')
@@ -41,10 +44,13 @@ class L0Dense(Dense):
 
           self.kernel = masked_kernel
 
+
       bias_0 = self.bias
       if self.bias_regularizer is not None:
-          trng_masked_bias = get_tensor_by_name(l0_absolute_path + "/bias" + l0_relative_path + "trng_mask:0")
-          pred_masked_bias = get_tensor_by_name(l0_absolute_path + "/bias" + l0_relative_path + "pred_mask:0")
+          l0_masked_bias_path = l0_absolute_path + "/bias" + l0_relative_path
+          trng_masked_bias, pred_masked_bias = get_l0_maskeds(l0_masked_bias_path)
+           # trng_masked_bias = get_tensor_by_name(l0_absolute_path + "/bias" + l0_relative_path + "trng_mask:0")
+           # pred_masked_bias = get_tensor_by_name(l0_absolute_path + "/bias" + l0_relative_path + "pred_mask:0")
           masked_bias = tf.cond(self.is_training,
                                 lambda: trng_masked_bias,
                                 lambda: pred_masked_bias, name='l0_masked_bias')
@@ -155,9 +161,6 @@ if __name__ == "__main__":
     n_hidden_1 = 256
     c_l0 = 1e-3
     x = tf.placeholder("float", [None, n_input])
-    tmp = L0Dense(n_hidden_1,
-                  bias_regularizer=l0_regularizer(c_l0),
-                  kernel_regularizer=l0_regularizer(c_l0))
-
-    x1 = tmp.apply(x)
+    is_training = True
+    tmp = l0_dense(x, n_hidden_1, is_training=is_training, kernel_regularization_scale=0.0)
 

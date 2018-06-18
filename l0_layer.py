@@ -5,13 +5,8 @@ from tensorflow.python.layers import utils
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.framework import ops
 from .l0_regularization import l0_regularizer
-from .l0_dense import get_tensor_by_name
+from .utils import get_l0_maskeds
 
-def get_l0_maskeds(scope_name):
-    trng_masked_tensor = get_tensor_by_name(scope_name + "trng_mask:0")
-    pred_masked_tensor = get_tensor_by_name(scope_name + "pred_mask:0")
-
-    return trng_masked_tensor, pred_masked_tensor
 
 
 class L0_Layer(base.Layer):
@@ -45,12 +40,16 @@ class L0_Layer(base.Layer):
 
   def call(self, inputs, training=False):
       l0_op = l0_regularizer(self.reg_const)
-      self.add_loss(l0_op(inputs))
-      l0_regularizer_scope = self.scope_name + '/l0_regularizer/'
-      layer_trng, layer_pred = get_l0_maskeds(l0_regularizer_scope)
-      return utils.smart_cond(training,
-                              lambda: layer_trng,
-                              lambda: layer_pred)
+
+      if l0_op is not None:
+          self.add_loss(l0_op(inputs))
+          l0_regularizer_scope = self.scope_name + '/l0_regularizer/'
+          layer_trng, layer_pred = get_l0_maskeds(l0_regularizer_scope)
+          return utils.smart_cond(training,
+                                  lambda: layer_trng,
+                                  lambda: layer_pred)
+      else:
+          return inputs
 
   # there was compute_output_shape from tf.layers.dropout which I deleted, note here for future problem
 
