@@ -43,7 +43,7 @@ def l0_computation(tensor,
     u = tf.random_uniform(shape=tensor_shape, dtype=tf.float32)
 
     c = tf.Variable(tf.random_normal(shape=tensor_shape, mean=mu_c, stddev=sigma_c), 
-                    name='el0n_mask',
+                    name='l0_mask',
                     #collections=['l0_vars'], # todo: the uninitializable issue to be discussed
                     dtype=tf.float32)
 
@@ -54,8 +54,8 @@ def l0_computation(tensor,
     s_bar_pred = tf_stretch(tf.nn.sigmoid(c), interval)
 
     # create L0_masted tensor in the graph and tag it with proper names
-    l0_tensor_training = tf.identity(tf_hard_sigmoid(s_bar) * tensor,  "trng_mask") #
-    l0_tensor_prediction = tf.identity(tf_hard_sigmoid(s_bar_pred) * tensor, "pred_mask")
+    l0_tensor_training = tf.identity(tf_hard_sigmoid(s_bar) * tensor,  "training_mask") #
+    l0_tensor_prediction = tf.identity(tf_hard_sigmoid(s_bar_pred) * tensor, "prediction_mask")
 
     add_losses = tf.nn.sigmoid(c - beta * (tf.log(-interval[0]) - tf.log(interval[1])))
     l0_loss = tf.reduce_sum(add_losses)
@@ -82,7 +82,7 @@ def l0_regularizer(scale, scope=None):
                              scale)
         if scale == 0.:
             logging.info('Scale of 0 disables regularizer.')
-            return lambda _: None
+            return None # todo: the original output was return lambda _: None; I need to change the format so that I can check when the lambda ==0 without creating new graph
 
     def l0(weights):
         """Applies l2 regularization to weights."""
