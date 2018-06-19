@@ -2,8 +2,8 @@ from __future__ import division, print_function, absolute_import
 import tensorflow as tf
 from tensorflow.python.layers.core import Dense
 from tensorflow.python.ops import init_ops
-from .l0_regularization import l0_regularizer
-from .utils import get_l0_maskeds
+from l0_regularization import l0_regularizer
+from utils import get_l0_maskeds
 
 
 
@@ -15,7 +15,6 @@ class L0Dense(Dense):
     super().__init__(*args, **kwargs)
 
 
-# todo use the get_l0_mask modules in l0_layer to simplfiy the call method!
   def call(self, inputs):
       l0_relative_path = '/Regularizer/l0_regularizer/'
       l0_absolute_path = self.scope_name
@@ -25,22 +24,9 @@ class L0Dense(Dense):
       if self.kernel_regularizer is not None:
           l0_masked_kernels_path = l0_absolute_path + "/kernel" + l0_relative_path
           trng_masked_kernel, pred_masked_kernel = get_l0_maskeds(l0_masked_kernels_path)
-          '''
-          trng_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "trng_mask:0")
-          pred_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "pred_mask:0")
-          '''
           masked_kernel = tf.cond(self.is_training,
                                   lambda: trng_masked_kernel,
                                   lambda: pred_masked_kernel, name='l0_masked_kernel')
-
-          # Alternative Masking: better learning result but not theoretically correct
-          # todo-to expose them if it works well
-          # trng_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "el0n_mask:0")
-          # pred_masked_kernel = get_tensor_by_name(l0_absolute_path + "/kernel" + l0_relative_path + "el0n_mask:0")
-          # masked_kernel = tf.cond(self.is_training,
-          #                         lambda: trng_masked_kernel * kernel_0,
-          #                         lambda: pred_masked_kernel * kernel_0, name='l0_masked_kernel')
-
 
           self.kernel = masked_kernel
 
@@ -49,8 +35,6 @@ class L0Dense(Dense):
       if self.bias_regularizer is not None:
           l0_masked_bias_path = l0_absolute_path + "/bias" + l0_relative_path
           trng_masked_bias, pred_masked_bias = get_l0_maskeds(l0_masked_bias_path)
-           # trng_masked_bias = get_tensor_by_name(l0_absolute_path + "/bias" + l0_relative_path + "trng_mask:0")
-           # pred_masked_bias = get_tensor_by_name(l0_absolute_path + "/bias" + l0_relative_path + "pred_mask:0")
           masked_bias = tf.cond(self.is_training,
                                 lambda: trng_masked_bias,
                                 lambda: pred_masked_bias, name='l0_masked_bias')
@@ -59,7 +43,6 @@ class L0Dense(Dense):
 
       output = super().call(inputs)
 
-      # change back to the orignal one
       self.kernel = kernel_0
       self.bias = bias_0
 

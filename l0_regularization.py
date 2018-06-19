@@ -32,17 +32,18 @@ def l0_computation(tensor,
                    interval=[-0.1, 1.1],
                    mu_c=np.log(3 / 7),
                    sigma_c=1e-3,
-                   beta=2/3):
+                   beta=2/3, seed=None):
 
-    ### todo, may modulize: module: mask_shape
+    # tensor-shape check:
     tensor_shape = tensor.get_shape().as_list() # use the list format
-    if None in tensor_shape:
-        tensor_shape = [1 if d is None else d for d in tensor_shape]
-    ###
+    if len(tensor_shape) > 2:
+        raise ValueError("The tensor_shape with rank not larger than 2 is not supported")
+    elif None in tensor_shape:
+        tensor_shape = [1 if d is None else d for d in tensor_shape] # for input format [?,d] or [d,?], designed for l0_layer application
 
-    u = tf.random_uniform(shape=tensor_shape, dtype=tf.float32)
+    u = tf.random_uniform(shape=tensor_shape, dtype=tf.float32, seed=seed)
 
-    c = tf.Variable(tf.random_normal(shape=tensor_shape, mean=mu_c, stddev=sigma_c), 
+    c = tf.Variable(tf.random_normal(shape=tensor_shape, mean=mu_c, stddev=sigma_c, seed=seed),
                     name='l0_mask',
                     #collections=['l0_vars'], # todo: the uninitializable issue to be discussed
                     dtype=tf.float32)
@@ -63,7 +64,7 @@ def l0_computation(tensor,
 
     return add_loss
 
-def l0_regularizer(scale, scope=None):
+def l0_regularizer(scale, scope=None, **kwargs):
     """Returns a function that can be used to apply L2 regularization to weights.
       Small values of L2 can help prevent overfitting the training data.
       Args:
@@ -90,7 +91,7 @@ def l0_regularizer(scale, scope=None):
             my_scale = ops.convert_to_tensor(scale,
                                              dtype=weights.dtype.base_dtype,
                                              name='scale')
-            l0_loss = l0_computation(weights)
+            l0_loss = l0_computation(weights, **kwargs)
             return standard_ops.multiply(my_scale, l0_loss, name=name)
 
     return l0

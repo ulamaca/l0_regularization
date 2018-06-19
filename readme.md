@@ -31,7 +31,6 @@
 ## To Solve/Do:
 - Check. The training loss is too large after the insertion of L_0, not sure if it is normal (at Swiss-Roll Dataset)
 - Do(optional). Make possible for using more than one regularization mechanisms
-- Do. seed argument is not developed for both l0_dense and l0_layer
 - Why? failure to identify the variable created in "collection" argument in tf...dense to be initialized
 - How? Better way to retrive the Tensors from l0_dense.call(...)
 - How? Minimize the argument for l0_dense (regularizer_kernel, _bias can be reduced to just reg_const)
@@ -39,5 +38,5 @@
 	- error handling, may resort to try/except and RaiseError
 	- Output None istead of lambda _: None for l0_regularizer, for later check and avoidance of unecessary graph creation. is it possible to do this with keeping the later format?
 	- More efficient creation for L0MLP (not in this project) using better OOP ideas.
-- Discussion. 1. broadcasting for l0_layer; 2. the way to check the tensor_shape in l0_computation; 3. 
+- Discussion. 1. broadcasting for l0_layer; 2. the way to check the tensor_shape in l0_computation; 3. l0_dense may not make sense to have a seed since the variable initializer have no seed neither.
 

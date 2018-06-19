@@ -4,8 +4,8 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.layers import utils
 from tensorflow.python.ops import nn_ops
 from tensorflow.python.framework import ops
-from .l0_regularization import l0_regularizer
-from .utils import get_l0_maskeds
+from l0_regularization import l0_regularizer
+from utils import get_l0_maskeds
 
 
 
@@ -39,7 +39,7 @@ class L0_Layer(base.Layer):
     self.seed = seed
 
   def call(self, inputs, training=False):
-      l0_op = l0_regularizer(self.reg_const)
+      l0_op = l0_regularizer(self.reg_const, seed=self.seed)
 
       if l0_op is not None:
           self.add_loss(l0_op(inputs))
